@@ -20,6 +20,7 @@ public class BoardManager : MonoBehaviour
     private float time = 0f;    // Proteklo vrijeme
     private int numberOfFields;    // Ukupan broj polja
     private int currentField = 0;    // Redni broj polja koje se trenutno prikazuje
+    private int[] fieldOrder;    // Redosljed pojavljivanja polja
 
     public Vector3 CellToWorld(Vector2Int cellIndex)    // Metoda koja vraća poziciju sredine polja na osnovu broja njegove vrste i kolone
     {
@@ -44,6 +45,21 @@ public class BoardManager : MonoBehaviour
         }
 
         numberOfFields = Levels.icePositions[level].Length;
+
+        fieldOrder = new int[numberOfFields];    // Inicijalizuj niz redosljeda prikazivanja polja
+        for (int i = 0; i < numberOfFields; i++)    // Kreiraj rastući niz vrijednosti od 0 do broj polja - 1
+        {
+            fieldOrder[i] = i;
+        }
+
+        for (int i = 0; i < numberOfFields; i++)    // Randomizuj redosljed vrijednosti prolaskom kroz sva polja
+        {
+			int j = Random.Range(0, numberOfFields);    // Izaberi slučajno polje
+            if (i != j)    // Ukoliko je slučajno izabrano polje drugačije od trenutnog zamijeni im vrijednosti
+            {
+                (fieldOrder[i], fieldOrder[j]) = (fieldOrder[j], fieldOrder[i]);
+            }
+        }
     }
 
     void Update()
@@ -68,7 +84,7 @@ public class BoardManager : MonoBehaviour
             return;    // Ne nastavljaj dalje
         }
 
-        var position = Levels.icePositions[level][currentField];    // Preuzmi poziciju tekućeg polja
+        var position = Levels.icePositions[level][fieldOrder[currentField]];    // Preuzmi poziciju tekućeg polja po slučajnom redosljedu
         iceFields[position.x, position.y].Show();    // Prikaži polje na datoj poziciji
 
         time -= displayDelay;    // Umanji proteklo vrijeme za sljedeće polje
