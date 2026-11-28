@@ -8,13 +8,18 @@ public class BoardManager : MonoBehaviour
     public AnimatedTile waterTile;    // Referenca ka animiranom sprajtu vode
     public FrogController frog;    // Referenca ka FrogController skripti
     public GameObject icePrefab;    // Referenca ka prefabu leda
-
+    public float displayDelay = 0.1f;    // Vrijeme između pojavljivanja dva ledena polja
 
     private Tilemap tilemap;    // Referenca ka tilemapi
     private Grid grid;    // Referenca ka gridu tilemape
 
     private int level = 0;    // Broj trenutnog nivoa
     private IceController[,] iceFields;    // Reference ka kontrolerima svakog polja leda na tabli
+
+    private bool initialized = false;    // Da li je završena inicijalizacija
+    private float time = 0f;    // Proteklo vrijeme
+    private int numberOfFields;    // Ukupan broj polja
+    private int currentField = 0;    // Redni broj polja koje se trenutno prikazuje
 
     public Vector3 CellToWorld(Vector2Int cellIndex)    // Metoda koja vraća poziciju sredine polja na osnovu broja njegove vrste i kolone
     {
@@ -38,12 +43,35 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        foreach(var position in Levels.icePositions[level])    // Prođi kroz sve elemente niza sa pozicijama leda
+        numberOfFields = Levels.icePositions[level].Length;
+    }
+
+    void Update()
+    {
+        if (initialized)    // Ako je inicijalizacija završena ne nastavljaj dalje
         {
-            iceFields[position.x, position.y].Show();    // Prikaži led na datoj poziciji
+            return;
         }
 
-        var pos = Levels.startPositions[level];    // Preuymi startnu poziciju žabe
-        frog.Spawn(this, new Vector2Int(pos.x, pos.y));    // Pozicioniraj žabu na datu poziciju
+        time += Time.deltaTime;    // Uvećaj vrijeme za proteklo vrijeme
+        if (time < displayDelay)    // Ako je proteklo manje vremena od definisanog ne nastavljaj dalje
+        {
+            return;
+        }
+
+        if (currentField >= numberOfFields)
+        {
+            var pos = Levels.startPositions[level];    // Preuzmi startnu poziciju žabe
+            frog.Spawn(this, new Vector2Int(pos.x, pos.y));    // Pozicioniraj žabu na datu poziciju
+            frog.gameObject.SetActive(true);    // Prikaži žabu
+            initialized = true;    // Inicijalizacija je završena
+            return;    // Ne nastavljaj dalje
+        }
+
+        var position = Levels.icePositions[level][currentField];    // Preuzmi poziciju tekućeg polja
+        iceFields[position.x, position.y].Show();    // Prikaži polje na datoj poziciji
+
+        time -= displayDelay;    // Umanji proteklo vrijeme za sljedeće polje
+        currentField++;    // Pređi na sljedeće polje
     }
 }
